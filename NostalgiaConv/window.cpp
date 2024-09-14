@@ -88,7 +88,7 @@ LRESULT CALLBACK NostalgiaWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
             return -1;
         }
 
-        SendMessageA(hTextBox, EM_SETLIMITTEXT, (WPARAM)1000000, 0);
+        SendMessageA(hTextBox, EM_SETLIMITTEXT, (WPARAM)1000000 * 100, 0); // 100 million chars
 
         return 0;
     }

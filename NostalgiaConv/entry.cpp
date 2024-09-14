@@ -114,17 +114,49 @@ void RegisterUnhandledFilter() {
 // Run all lua / luac code here, since this function is scheduled.
 lua_State* vState = nullptr;
 
+int LoadstringFunc(std::uintptr_t myThread) {
+    std::string script{};
+
+    std::uint32_t len = 0;
+    const char* str = rbx_tostring(myThread, -1, &len);
+
+    script.resize(len, 0);
+    std::memcpy(&script[0], str, len);
+
+    conversion::ProtoConversion(myThread, vState, script); // Race condition
+    return 1;
+}
+
 int RenderSteppedFunc(std::uintptr_t myThread) {
     if (vState) {
         std::lock_guard myGuard{ scriptListMtx };
         for (const std::string& script : scriptList) {
             std::uintptr_t scriptThread = rbx_newthread(myThread); // Each script will run on its own thread
 
+            std::uintptr_t currTop = *(std::uintptr_t*)(scriptThread + 0x10);
+
+            rbx_getfield(scriptThread, LUA_GLOBALSINDEX, "game");;
+            rbx_getfield(scriptThread, -1, "GetService");
+            rbx_pushvalue(scriptThread, -2);
+            rbx_pushstring(scriptThread, "Players");
+            rbx_call(scriptThread, 2, 1);
+            rbx_getfield(scriptThread, -1, "LocalPlayer");
+            rbx_getfield(scriptThread, -1, "PlayerGui"); // Maybe remove since can crash
+
+            rbx_getfield(scriptThread, LUA_GLOBALSINDEX, "Instance");
+            rbx_getfield(scriptThread, -1, "new");
+            rbx_pushstring(scriptThread, "LocalScript");
+            rbx_pushvalue(scriptThread, -4);
+            rbx_call(scriptThread, 2, 1); // Create new script with parent of PlayerGui
+            rbx_setfield(scriptThread, LUA_GLOBALSINDEX, "script"); // Set as script
+
+            rbx_pushcclosure(scriptThread, (std::uintptr_t)&LoadstringFunc, 0);
+            rbx_setfield(scriptThread, LUA_GLOBALSINDEX, "loadstring");
+
+            *(std::uintptr_t*)(scriptThread + 0x10) = currTop; // Restore stack
+
             if (conversion::ProtoConversion(scriptThread, vState, script.c_str())) {
                 rbx_spawn(scriptThread);
-                std::uintptr_t* pStackTop = (std::uintptr_t*)(scriptThread + 0x10);
-                *pStackTop -= 0x10;
-
                 std::printf("Executed script!\n");
             }
         }

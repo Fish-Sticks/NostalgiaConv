@@ -44,7 +44,6 @@ static std::uint32_t obfuscateInstruction(std::uint32_t instruction, std::uint32
 #define RBX_TYPE_PROTO 9
 #define RBX_TYPE_UPVAL 10
 
-
 #define RBX_OP_LOADBOOL 0x00
 #define RBX_OP_GETTABLE 0x01
 #define RBX_OP_GETUPVAL 0x02
@@ -131,3 +130,6 @@ static rbx_pushstring_t rbx_pushstring = (rbx_pushstring_t)(robloxBase + 0x1747E
 
 using rbx_pushvalue_t = void(__cdecl*)(std::uintptr_t state, std::int32_t index);
 static rbx_pushvalue_t rbx_pushvalue = (rbx_pushvalue_t)(robloxBase + 0x1748D0);
+
+using rbx_tostring_t = const char* (__cdecl*)(std::uintptr_t state, std::int32_t index, std::uint32_t* len);
+static rbx_tostring_t rbx_tostring = (rbx_tostring_t)(robloxBase + 0x175320);
