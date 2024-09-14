@@ -3,7 +3,10 @@
 ###############################################################################
 * text=auto
 *.h linguist-language=C++
+*.hpp linguist-language=C++
 *.cpp linguist-language=C++
+*.c linguist-language=C++
+
 
 ###############################################################################
 # Set default behavior for command prompt diff.
