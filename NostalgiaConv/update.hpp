@@ -17,10 +17,8 @@ static std::uint32_t deobfuscateInstruction(std::uint32_t obfInstruction, std::u
 }
 
 static std::uint32_t obfuscateInstruction(std::uint32_t instruction, std::uint32_t index) {
-    // Cracking it with given constraints just like SMT solver except way shittier.
-    // We can minimize the loop to be only looping over the right opcode for a way faster crack!
-    // Took 92 seconds to obfuscate! (AFTER MINIMIZING IT TAKES 1 SECOND)
-    // Time only takes 0-40ms now, this encryption has been COOKED.
+    // Cracking it with given constraints just like SMT solver except way worse.
+    // Time only takes 0-40ms now.
 
     std::uint32_t startRange = ((std::uint32_t)VGET_OPCODE(instruction) << 26);
     std::uint32_t syntheticOpInstr = VCLEAR_OPCODE(instruction); // By masking out the changing bytes which don't matter (opcode) we can bruteforce extremely fast.
