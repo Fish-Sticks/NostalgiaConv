@@ -1,5 +1,5 @@
 #include "conversion.hpp"
-#include "update.hpp"
+#include "../update.hpp"
 #include <intrin.h>
 #include <unordered_map>
 
@@ -308,7 +308,7 @@ std::uintptr_t TranspileProto(std::uintptr_t rbxState, Proto* vProto,
 		case OP_TAILCALL:
 		case OP_CLOSURE:
 		case OP_RETURN: {
-			transpiledInstr = obfuscateInstruction(transpiledInstr, currIndex);
+			transpiledInstr = obfuscateInstructionFast(transpiledInstr, currIndex);
 			break;
 		}
 		}

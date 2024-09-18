@@ -3,11 +3,11 @@
 #include <cstdint>
 
 extern "C" {
-#include "lua/lapi.h"
-#include "lua/lauxlib.h"
-#include "lua/lopcodes.h"
-#include "lua/lobject.h"
-#include "lua/lstate.h"
+#include "../lua/lapi.h"
+#include "../lua/lauxlib.h"
+#include "../lua/lopcodes.h"
+#include "../lua/lobject.h"
+#include "../lua/lstate.h"
 }
 
 namespace conversion {

@@ -68,7 +68,7 @@ typedef union {
 ** Tagged Values
 */
 
-#define TValuefields	Value value; int tt
+#define TValuefields	Value value; int tt; int unk
 
 typedef struct lua_TValue {
   TValuefields;

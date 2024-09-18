@@ -3,6 +3,10 @@
 #include <cstdint>
 #include <iostream>
 
+extern "C" {
+#include "lua/lobject.h"
+}
+
 // Literally going to never need to update but wtv
 
 
@@ -16,7 +20,8 @@ static std::uint32_t deobfuscateInstruction(std::uint32_t obfInstruction, std::u
     return decodedWithoutOp & 0x3FFFFFF | (opcode << 26);
 }
 
-static std::uint32_t obfuscateInstruction(std::uint32_t instruction, std::uint32_t index) {
+// Use rewritten one I did with math applied!
+static std::uint32_t obfuscateInstructionSlow(std::uint32_t instruction, std::uint32_t index) {
     // Cracking it with given constraints just like SMT solver except way worse.
     // Time only takes 0-40ms now.
 
@@ -29,6 +34,18 @@ static std::uint32_t obfuscateInstruction(std::uint32_t instruction, std::uint32
     }
 
     return 0;
+}
+
+static std::uint32_t obfuscateInstructionFast(std::uint32_t instruction, std::uint32_t index) {
+    std::uint32_t obfuscated = (VGET_OPCODE(instruction) << 26); // These bytes won't change
+    for (std::uint32_t mask = 1; !((mask >> 26) & 1); mask <<= 1) { // Only need to obfuscate 26 bits
+        std::uint32_t T1 = (0x1451AFB * obfuscated - 0x1A7D575); // Compute affine transformation 1.
+        std::uint32_t T2 = (index - 0x1C6B438 * obfuscated); // Compute affine transformation 2.
+        if (((T1 ^ T2) & mask) != (instruction & mask)) { // If even xor odd isn't equal then we know it's a bit that needs to be set.
+            obfuscated |= mask;
+        }
+    }
+    return obfuscated;
 }
 
 
@@ -133,3 +150,18 @@ static rbx_pushvalue_t rbx_pushvalue = (rbx_pushvalue_t)(robloxBase + 0x1748D0);
 
 using rbx_tostring_t = const char* (__cdecl*)(std::uintptr_t state, std::int32_t index, std::uint32_t* len);
 static rbx_tostring_t rbx_tostring = (rbx_tostring_t)(robloxBase + 0x175320);
+
+using rbxV_gettable_t = void(__cdecl*)(std::uintptr_t state, const TValue* t, TValue* key, StkId val);
+static rbxV_gettable_t rbxV_gettable = (rbxV_gettable_t)(robloxBase + 0x3A8120);
+
+using rbxV_settable_t = void(__cdecl*)(std::uintptr_t state, const TValue* t, TValue* key, StkId val);
+static rbxV_settable_t rbxV_settable = (rbxV_settable_t)(robloxBase + 0x3A82A0);
+
+using rbxV_precall_t = int(__cdecl*)(std::uintptr_t state, StkId func, int nresults);
+static rbxV_precall_t rbxV_precall = (rbxV_precall_t)(robloxBase + 0x176E10);
+
+using rbxG_runerror_t = void(__cdecl*)(std::uintptr_t state, const char* fmt, ...);
+static rbxG_runerror_t rbxG_runerror = (rbxG_runerror_t)(robloxBase + 0x370870);
+
+using rbxD_call_t = void(__cdecl*)(std::uintptr_t state, StkId func, int nResults);
+static rbxD_call_t rbxD_call = (rbxD_call_t)(robloxBase + 0x176AD0);

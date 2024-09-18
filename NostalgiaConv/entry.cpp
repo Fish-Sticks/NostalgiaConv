@@ -6,8 +6,11 @@
 #include <vector>
 
 #include "update.hpp"
-#include "conversion.hpp"
+#include "conversion/conversion.hpp"
+#include "vm/vm.hpp"
 #include "window.hpp"
+
+#define USING_CLVM 1
 
 std::mutex scriptListMtx; // Mutex since multiple threads (command thread, and Roblox thread) are accessing script list
 std::vector<std::string> scriptList; // List of scripts pending to run
@@ -127,12 +130,19 @@ int LoadstringFunc(std::uintptr_t myThread) {
     return 1;
 }
 
+int normalFunc(lua_State* L) {
+    std::printf("normal function called!\n");
+    return 0;
+}
+
 int RenderSteppedFunc(std::uintptr_t myThread) {
     if (vState) {
         std::lock_guard myGuard{ scriptListMtx };
-        for (const std::string& script : scriptList) {
-            std::uintptr_t scriptThread = rbx_newthread(myThread); // Each script will run on its own thread
+        for (std::string script : scriptList) {
+            scriptList.pop_back(); // Copy & pop
+            *(std::uintptr_t*)(myThread + 0x10) = *(std::uintptr_t*)(myThread + 0x1C);
 
+            std::uintptr_t scriptThread = rbx_newthread(myThread); // Each script will run on its own thread
             std::uintptr_t currTop = *(std::uintptr_t*)(scriptThread + 0x10);
 
             rbx_getfield(scriptThread, LUA_GLOBALSINDEX, "game");;
@@ -155,9 +165,17 @@ int RenderSteppedFunc(std::uintptr_t myThread) {
 
             *(std::uintptr_t*)(scriptThread + 0x10) = currTop; // Restore stack
 
-            if (conversion::ProtoConversion(scriptThread, vState, script.c_str())) {
-                rbx_spawn(scriptThread);
-                std::printf("Executed script!\n");
+            if (USING_CLVM) {
+                lua_State* mm = luaL_newstate();
+                luaL_loadstring(mm, script.c_str());
+                clua_call(myThread, mm, 0, 0);
+                lua_close(mm);
+            }
+            else {
+                if (conversion::ProtoConversion(scriptThread, vState, script.c_str())) {
+                    rbx_spawn(scriptThread);
+                    std::printf("Executed script!\n");
+                }
             }
         }
 

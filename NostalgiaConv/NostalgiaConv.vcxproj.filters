@@ -18,7 +18,7 @@
     <ClCompile Include="entry.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="conversion.cpp">
+    <ClCompile Include="conversion\conversion.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="lua\lapi.c">
@@ -114,12 +114,15 @@
     <ClCompile Include="window.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="vm\vm.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="update.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="conversion.hpp">
+    <ClInclude Include="conversion\conversion.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="lua\lapi.h">
@@ -192,6 +195,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="window.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vm\vm.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
