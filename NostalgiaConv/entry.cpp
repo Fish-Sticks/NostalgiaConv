@@ -143,13 +143,15 @@ int RenderSteppedFunc(std::uintptr_t myThread) {
             *(std::uintptr_t*)(myThread + 0x10) = *(std::uintptr_t*)(myThread + 0x1C);
 
             std::uintptr_t scriptThread = rbx_newthread(myThread); // Each script will run on its own thread
+            rbxL_ref(myThread, LUA_REGISTRYINDEX); // Store inside Roblox registry too 
+
             std::uintptr_t currTop = *(std::uintptr_t*)(scriptThread + 0x10);
 
-            rbx_getfield(scriptThread, LUA_GLOBALSINDEX, "game");;
+            rbx_getfield(scriptThread, LUA_GLOBALSINDEX, "game");
             rbx_getfield(scriptThread, -1, "GetService");
             rbx_pushvalue(scriptThread, -2);
             rbx_pushstring(scriptThread, "Players");
-            rbx_call(scriptThread, 2, 1);
+            rbx_pcall(scriptThread, 2, 1, 0);
             rbx_getfield(scriptThread, -1, "LocalPlayer");
             rbx_getfield(scriptThread, -1, "PlayerGui"); // Maybe remove since can crash
 
@@ -157,7 +159,7 @@ int RenderSteppedFunc(std::uintptr_t myThread) {
             rbx_getfield(scriptThread, -1, "new");
             rbx_pushstring(scriptThread, "LocalScript");
             rbx_pushvalue(scriptThread, -4);
-            rbx_call(scriptThread, 2, 1); // Create new script with parent of PlayerGui
+            rbx_pcall(scriptThread, 2, 1, 0); // Create new script with parent of PlayerGui
             rbx_setfield(scriptThread, LUA_GLOBALSINDEX, "script"); // Set as script
 
             rbx_pushcclosure(scriptThread, (std::uintptr_t)&LoadstringFunc, 0);
@@ -166,10 +168,10 @@ int RenderSteppedFunc(std::uintptr_t myThread) {
             *(std::uintptr_t*)(scriptThread + 0x10) = currTop; // Restore stack
 
             if (USING_CLVM) {
-                lua_State* mm = luaL_newstate();
-                luaL_loadstring(mm, script.c_str());
-                clua_call(myThread, mm, 0, 0);
-                lua_close(mm);
+                if (vm::LaunchVM(scriptThread, script.c_str())) {
+                    rbx_spawn(scriptThread);
+                    std::printf("Executed script!\n");
+                }
             }
             else {
                 if (conversion::ProtoConversion(scriptThread, vState, script.c_str())) {
@@ -288,4 +290,8 @@ NOSTALGIACONV | PROTO CONVERSION EXPLOIT.
     MAKING BYTECODE CONVERSION EXPLOITS BECAUSE I LIKE TO GET LOW INTO THE VM AND HAVE CONTROL OVER EVERYTHING START TO FINISH.
 
     HAVE FUN!
+
+
+    THE CLVM IS A COMPLETELY DIFFERENT BEAST, IT'S HARD TO DOCUMENT HOW IT WORKS DUE TO ITS DELICATE AND COMPLEX INTERNALS. FIRST OF ALL, YOU MUST AVOID YOUR SHIT BEING GC'D ON BOTH STATES.
+    SECONDLY, YOU MUST ENSURE CORRECT SYNC BETWEEN YOUR VM AND ROBLOX'S, YOU MUST HAVE YOUR CALL CONTEXT SETUP, YOU MUST HANDLE ERRORS, AND YOU MUST HANDLE EVERYTHING :)
 */

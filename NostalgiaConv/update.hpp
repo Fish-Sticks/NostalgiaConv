@@ -124,8 +124,10 @@ static rbx_getstate_t rbx_getstate = (rbx_getstate_t)(robloxBase + 0x154E70);
 using rbx_spawn_t = void(__cdecl*)(std::uintptr_t state);
 static rbx_spawn_t rbx_spawn = (rbx_spawn_t)(robloxBase + 0x160670);
 
-using rbx_call_t = void(__cdecl*)(std::uintptr_t state, std::int32_t narg, std::int32_t nres);
-static rbx_call_t rbx_call = (rbx_call_t)(robloxBase + 0x173710);
+using rbx_call_t = std::int32_t(__cdecl*)(std::uintptr_t state, std::int32_t narg, std::int32_t nres, std::int32_t nerr);
+static rbx_call_t rbx_pcall = (rbx_call_t)(robloxBase + 0x174330);
+
+#define rbx_call(s, a, b) rbx_pcall(s, a, b, 0)
 
 using rbx_fnewproto_t = std::uintptr_t(__cdecl*)(std::uintptr_t state);
 static rbx_fnewproto_t rbx_fnewproto = (rbx_fnewproto_t)(robloxBase + 0x176540);
@@ -151,17 +153,33 @@ static rbx_pushvalue_t rbx_pushvalue = (rbx_pushvalue_t)(robloxBase + 0x1748D0);
 using rbx_tostring_t = const char* (__cdecl*)(std::uintptr_t state, std::int32_t index, std::uint32_t* len);
 static rbx_tostring_t rbx_tostring = (rbx_tostring_t)(robloxBase + 0x175320);
 
+// CLVM:
 using rbxV_gettable_t = void(__cdecl*)(std::uintptr_t state, const TValue* t, TValue* key, StkId val);
 static rbxV_gettable_t rbxV_gettable = (rbxV_gettable_t)(robloxBase + 0x3A8120);
 
 using rbxV_settable_t = void(__cdecl*)(std::uintptr_t state, const TValue* t, TValue* key, StkId val);
 static rbxV_settable_t rbxV_settable = (rbxV_settable_t)(robloxBase + 0x3A82A0);
 
-using rbxV_precall_t = int(__cdecl*)(std::uintptr_t state, StkId func, int nresults);
+using rbxV_precall_t = int(__cdecl*)(std::uintptr_t state, StkId func, std::int32_t nresults);
 static rbxV_precall_t rbxV_precall = (rbxV_precall_t)(robloxBase + 0x176E10);
 
 using rbxG_runerror_t = void(__cdecl*)(std::uintptr_t state, const char* fmt, ...);
 static rbxG_runerror_t rbxG_runerror = (rbxG_runerror_t)(robloxBase + 0x370870);
 
-using rbxD_call_t = void(__cdecl*)(std::uintptr_t state, StkId func, int nResults);
+using rbxD_call_t = void(__cdecl*)(std::uintptr_t state, StkId func, std::int32_t nResults);
 static rbxD_call_t rbxD_call = (rbxD_call_t)(robloxBase + 0x176AD0);
+
+using rbx_touserdata_t = void* (__cdecl*)(std::uintptr_t state, std::int32_t index);
+static rbx_touserdata_t rbx_touserdata = (rbx_touserdata_t)(robloxBase + 0x175660);
+
+using rbx_tonumber_t = double(__cdecl*)(std::uintptr_t state, std::int32_t index);
+static rbx_tonumber_t rbx_tonumber = (rbx_tonumber_t)(robloxBase + 0x175580);
+
+using rbxL_ref_t = std::int32_t(__cdecl*)(std::uintptr_t state, std::int32_t index);
+static rbxL_ref_t rbxL_ref = (rbxL_ref_t)(robloxBase + 0x3723B0);
+
+using rbx_yield_t = std::int32_t(__cdecl*)(std::uintptr_t state, std::int32_t nresults);
+static rbx_yield_t rbx_yield = (rbx_yield_t)(robloxBase + 0x177470);
+
+using rbxd_poscall_t = int(__cdecl*)(std::uintptr_t state, StkId firstResult);
+static rbxd_poscall_t rbxD_poscall = (rbxd_poscall_t)(robloxBase + 0x176D70);
